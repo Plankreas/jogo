@@ -228,3 +228,39 @@ def colidem(vaca, churras):
         esquerda_vaca <= direita_churras and \
         baixo_vaca >= cima_churras and \
         cima_vaca <= baixo_churras
+
+
+''' ================= '''
+''' Main (Big Bang):
+'''
+
+
+
+'''
+Jogo -> Jogo
+inicie o mundo com JOGO_INICIAL
+'''
+def main(inic):
+    big_bang(inic,  # Jogo
+             tela=tela, frequencia=FREQUENCIA,
+             quando_tick=mover_tudo,  # Jogo -> Jogo
+             desenhar=desenha_jogo,  # Jogo -> Imagem
+             quando_tecla=trata_tecla_jogo,  # Hero Tecla -> Hero
+             quando_solta_tecla=trata_solta_jogo,  # Jogo Tecla -> Jogo
+             modo_debug=True
+             )
+
+
+
+''' Hero -> Hero '''
+''' inicie o mundo com HERO_INICIAL '''
+def main_hero(inic):
+    big_bang(inic,   # Vaca
+             tela=tela, frequencia=FREQUENCIA,
+             quando_tick=mover_hero,  # Hero -> Hero
+             desenhar=desenha_hero,   # Hero -> Imagem
+             quando_tecla=trata_tecla_hero, # Hero Tecla -> Hero
+             modo_debug=True
+             )
+
+main(JOGO_INICIAL)
