@@ -213,21 +213,21 @@ def mover_enemy(enemy):
 colidem: Hero, Enemy -> Boolean
 Verifica se o herói e o inimigo colidiram
 '''
-def colidem(vaca, churras):
-    esquerda_vaca = vaca.x - METADE_L_VACA
-    direita_vaca = vaca.x + METADE_L_VACA
-    cima_vaca = Y_VACA - METADE_H_VACA
-    baixo_vaca = Y_VACA + METADE_H_VACA
+def colidem(hero, enemy):
+    esquerda_hero = hero.x - METADE_L_
+    direita_hero = hero.x + METADE_L_HERO
+    cima_hero = Y_HERO - METADE_H_HERO
+    baixo_hero = Y_HERO + METADE_H_HERO
 
-    enemyL = enemy.x - METADE_L_CHURRAS
-    enemyR = enemy.x + METADE_L_CHURRAS
-    enemyU = enemy.y - METADE_H_CHURRAS
-    enemyD = enemy.y + METADE_H_CHURRAS
+    enemyL = enemy.x - METADE_L_ENEMY
+    enemyR = enemy.x + METADE_L_ENEMY
+    enemyU = enemy.y - METADE_H_ENEMY
+    enemyD = enemy.y + METADE_H_ENEMY
 
-    return direita_vaca >= esquerda_churras and \
-        esquerda_vaca <= direita_churras and \
-        baixo_vaca >= cima_churras and \
-        cima_vaca <= baixo_churras
+    return direita_hero >= esquerda_enemy and \
+        esquerda_hero <= direita_enemy and \
+        baixo_hero >= cima_enemy and \
+        cima_hero <= baixo_enemy
 
 
 ''' ================= '''
@@ -255,7 +255,7 @@ def main(inic):
 ''' Hero -> Hero '''
 ''' inicie o mundo com HERO_INICIAL '''
 def main_hero(inic):
-    big_bang(inic,   # Vaca
+    big_bang(inic,   # Hero
              tela=tela, frequencia=FREQUENCIA,
              quando_tick=mover_hero,  # Hero -> Hero
              desenhar=desenha_hero,   # Hero -> Imagem
