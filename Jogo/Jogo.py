@@ -229,6 +229,41 @@ def colidem(hero, enemy):
         baixo_hero >= cima_enemy and \
         cima_hero <= baixo_enemy
 
+'''
+trata_tecla_jogo: Jogo, Tecla -> Jogo
+Trata tecla para o jogo todo.
+'''
+def trata_tecla_jogo(jogo, tecla):
+    if (not jogo.game_over):
+        nova_hero = trata_tecla_vaca(jogo.hero, tecla)
+        return Jogo(nova_hero, jogo.enemy, jogo.game_over, jogo.tempo_brotagem_enemy, jogo.pontuacao, jogo.proximo_alvo)
+    elif tecla == pg.K_RETURN:
+        return JOGO_INICIAL
+    else:
+        return jogo
+
+'''
+trata_solta_jogo: Jogo Tecla -> Jogo
+'''
+def trata_solta_jogo(jogo, tecla):
+    if tecla == pg.K_LEFT or tecla == pg.K_RIGHT:
+        return Jogo(Hero(jogo.hero.x, 0), jogo.enemy, jogo.game_over, jogo.tempo_brotagem_enemy, jogo.pontuacao, jogo.proximo_alvo)
+    return jogo
+
+'''
+trata_tecla: Hero, Tecla -> Hero  ##assinatura
+Quando teclar "espaço" vira a hero  '''
+def trata_tecla_hero(hero, tecla):
+    if tecla == TC_VIRAR:
+        return Hero(hero.x, -hero.dx)
+    elif tecla == pg.K_RIGHT:
+        return Hero(hero.x, DX)
+    elif tecla == pg.K_LEFT:
+        return Hero(hero.x, -DX)
+    else:
+return hero
+
+
 
 ''' ================= '''
 ''' Main (Big Bang):
