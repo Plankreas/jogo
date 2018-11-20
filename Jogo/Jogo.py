@@ -144,8 +144,8 @@ desenha_enemy: ListEnemy -> Imagem
 Desenha os inimigos
 '''
 def desenha_enemies(enemies):
-    for ene in enemy:
-        desenha_enemy(enemy)
+    for ene in enemies:
+        desenha_enemy(enemies)
 
 
 '''
