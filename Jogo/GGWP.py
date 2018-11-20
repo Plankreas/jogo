@@ -57,6 +57,9 @@ mover_hero: Hero -> Hero
 Move o Herói
 '''
 def mover_hero(hero):
+    pulo = False
+    cont = 10
+
     hero.x = hero.x + hero.dx
     hero.y = hero.y + hero.dy
 
@@ -73,8 +76,16 @@ def mover_hero(hero):
         hero.dy = 0
     else:
         hero.dy += G
-        hero.y += hero.dy
-
+        if not(pulo):
+            if (pg.K_UP):
+                pulo = True
+        else:
+            if cont >= -10:
+                hero.dy -= (cont **2) * 0.5
+                cont -= 1
+            else:
+                pulo = False
+                cont = 10
         if hero.y >= CHAO:
             hero.y = CHAO
             hero.dy = 0
@@ -88,7 +99,7 @@ Faz o herói se movimentar para a direita ou esquerda, ou pular
 '''
 def trata_tecla_hero(hero, tecla):
     if tecla == pg.K_UP and hero.y == CHAO:
-        hero.dy -= 15
+        hero.dy -= 20
     elif tecla == pg.K_RIGHT:
         hero.dx = DX
     elif tecla == pg.K_LEFT:
@@ -111,7 +122,8 @@ def main(inic):
              quando_tick=mover_hero,
              desenhar=desenha_hero,
              quando_tecla=trata_tecla_hero,
-             quando_solta_tecla=trata_solta_tecla
+             quando_solta_tecla=trata_solta_tecla,
+             modo_debug= True
              )
 
 main(HERO_INICIAL)

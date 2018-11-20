@@ -5,6 +5,7 @@ from htdp_pt_br.universe import *
 import random
 
 IMAGEM = circulo(50,Cor(96, 219, 211))
+PLAT = retangulo(200,35,Cor(96, 219, 211))
 
 
 
@@ -24,8 +25,8 @@ METADE_L_HERO = largura_imagem(IMAGEM) // 2
 METADE_A_HERO = altura_imagem(IMAGEM) // 2
 METADE_L_ENEMY = largura_imagem(IMAGEM) // 2
 METADE_A_ENEMY = altura_imagem(IMAGEM) // 2
-METADE_L_PLAT = altura_imagem(IMAGEM) // 2
-METADE_A_PLAT = altura_imagem(IMAGEM) // 2
+METADE_L_PLAT = altura_imagem(PLAT) // 2
+METADE_A_PLAT = altura_imagem(PLAT) // 2
 
 
 LIMITE_ESQUERDO = METADE_L_HERO
@@ -36,6 +37,11 @@ LIMITE_BAIXO = ALTURA - METADE_A_HERO
 CHAO = LIMITE_BAIXO
 
 
+'''================================================================================================'''
+''' ==================================== [DEFINIÇÃO DE DADOS] ====================================='''
+'''================================================================================================'''
+
+
 Hero = definir_estrutura("hero", "x, y, dx, dy", mutavel=True)
 ''' Hero pode ser formado da seguinte forma: Hero(Int[LIMITE_ESQUERDO, LIMITE_DIREITO], Int[-LARGURA, +LARGURA])
 interp. representa a posição do herói no eixo x e y, e sua velocidadee direção (dx e dy)
@@ -43,6 +49,47 @@ interp. representa a posição do herói no eixo x e y, e sua velocidadee direç
 #EXEMPLOS:
 HERO_INICIAL = Hero(LARGURA//2, ALTURA//2, 0, 0)
 
+##TEMPLATE
+'''
+def fn_para_hero(hero):
+    ... hero.x
+        hero.y
+        hero.dx
+        hero.dy
+'''
+
+Jogo = definir_estrutura("Jogo", "hero, enemies, game_over, enemy_time, point", mutavel=True)
+''' Jogo pode ser formado assim: Jogo(Hero, ListaEnemy, Boolean, Int+)
+interp. representa o jogo todo com um herói e zero ou mais inimigos. O campo game_over indica se o jogo está acabado ou não.
+'''
+#EXEMPLOS:
+JOGO_INICIAL = Jogo(HERO_INICIAL, [], False, 0, 0, 1)
+
+##TEMPLATE
+'''
+def fn_para_jogo(jogo):
+    ... jogo.hero
+        jogo.enemy
+        jogo.game_over
+'''
+
+'''================================================================================================'''
+''' ========================================== [FUNÇÕES] =========================================='''
+'''================================================================================================'''
+
+
+''' ------------ [DESENHA] ------------'''
+
+'''
+desenha_jogo: Jogo -> Imagem
+Desenha todos os elementos do jogo de acordo com o estado atual
+'''
+def desenha_jogo(jogo):
+    if (not jogo.game_over):
+        desenha_hero(jogo.hero)
+        desenha_enemies(jogo.enemy)
+    else:
+        desenha_game_over()
 
 
 '''
@@ -57,6 +104,9 @@ mover_hero: Hero -> Hero
 Move o Herói
 '''
 def mover_hero(hero):
+    pulo = False
+    cont = 10
+
     hero.x = hero.x + hero.dx
     hero.y = hero.y + hero.dy
 
@@ -73,8 +123,16 @@ def mover_hero(hero):
         hero.dy = 0
     else:
         hero.dy += G
-        hero.y += hero.dy
-
+        if not(pulo):
+            if (pg.K_UP):
+                pulo = True
+        else:
+            if cont >= -10:
+                hero.dy -= (cont **2) * 0.5
+                cont -= 1
+            else:
+                pulo = False
+                cont = 10
         if hero.y >= CHAO:
             hero.y = CHAO
             hero.dy = 0
@@ -88,7 +146,7 @@ Faz o herói se movimentar para a direita ou esquerda, ou pular
 '''
 def trata_tecla_hero(hero, tecla):
     if tecla == pg.K_UP and hero.y == CHAO:
-        hero.dy -= 15
+        hero.dy -= 20
     elif tecla == pg.K_RIGHT:
         hero.dx = DX
     elif tecla == pg.K_LEFT:
@@ -111,7 +169,8 @@ def main(inic):
              quando_tick=mover_hero,
              desenhar=desenha_hero,
              quando_tecla=trata_tecla_hero,
-             quando_solta_tecla=trata_solta_tecla
+             quando_solta_tecla=trata_solta_tecla,
+             modo_debug= True
              )
 
 main(HERO_INICIAL)
