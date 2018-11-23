@@ -4,68 +4,13 @@
 from htdp_pt_br.universe import *
 import random
 
-IMAGEM = circulo(25,Cor(96, 219, 150))
+IMAGEM = circulo(50,Cor(96, 219, 211))
 PLAT = retangulo(200,35,Cor(96, 219, 211))
 
 
-StandR = [carregar_imagem("./SR1.png"),
-         carregar_imagem("./SR2.png"),
-         carregar_imagem("./SR3.png"),
-         carregar_imagem("./SR4.png"),
-         carregar_imagem("./SR1.png"),
-         carregar_imagem("./SR1.png"),
-         carregar_imagem("./SR1.png"),
-         carregar_imagem("./SR1.png"),
-         carregar_imagem("./SR1.png"),
-         carregar_imagem("./SR1.png"),
-         carregar_imagem("./SR1.png")]
 
-StandL = [carregar_imagem("./SL1.png"),
-         carregar_imagem("./SL2.png"),
-         carregar_imagem("./SL3.png"),
-         carregar_imagem("./SL4.png"),
-         carregar_imagem("./SL1.png"),
-         carregar_imagem("./SL1.png"),
-         carregar_imagem("./SL1.png"),
-         carregar_imagem("./SL1.png"),
-         carregar_imagem("./SL1.png"),
-         carregar_imagem("./SL1.png"),
-         carregar_imagem("./SL1.png")]
 
-WalkR = [carregar_imagem("./WR1.png"),
-         carregar_imagem("./WR2.png"),
-         carregar_imagem("./WR3.png"),
-         carregar_imagem("./WR4.png"),
-         carregar_imagem("./WR5.png"),
-         carregar_imagem("./WR6.png"),
-         carregar_imagem("./WR7.png"),
-         carregar_imagem("./WR8.png")]
 
-WalkL = [carregar_imagem("./WL1.png"),
-         carregar_imagem("./WL2.png"),
-         carregar_imagem("./WL3.png"),
-         carregar_imagem("./WL4.png"),
-         carregar_imagem("./WL5.png"),
-         carregar_imagem("./WL6.png"),
-         carregar_imagem("./WL7.png"),
-         carregar_imagem("./WL8.png")]
-
-JumpR = [carregar_imagem("./JR1.png"),
-         carregar_imagem("./JR2.png"),
-         carregar_imagem("./JR3.png")]
-
-JumpR3 = carregar_imagem("JR3.png")
-JumpL3 = carregar_imagem("JL3.png")
-
-JumpL = [carregar_imagem("./JL1.png"),
-         carregar_imagem("./JL2.png"),
-         carregar_imagem("./JL3.png")]
-'''
-Cai = []
-'''
-
-Scont = 0
-Wcont = 0
 
 
 
@@ -73,7 +18,7 @@ Wcont = 0
 ALTURA, LARGURA = 600,600
 tela = criar_tela_base(ALTURA, LARGURA)
 
-DX = 5
+DX = 7
 G = 1
 
 METADE_L_HERO = largura_imagem(IMAGEM) // 2
@@ -91,9 +36,6 @@ LIMITE_BAIXO = ALTURA - METADE_A_HERO
 
 CHAO = LIMITE_BAIXO
 COLIDE = False
-
-Right = True
-Left = False
 
 '''================================================================================================'''
 ''' ==================================== [DEFINIÇÃO DE DADOS] ====================================='''
@@ -116,12 +58,12 @@ def fn_para_hero(hero):
         hero.dy
 '''
 
-Plat = definir_estrutura("plat", "x, y", mutavel=True)
+Plataformas = definir_estrutura("plataformas", "x, y", mutavel=True)
 ''' Plat pode ser formado da seguinte forma: Plat(Int[LIMITE_ESQUERDO, LIMITE_DIREITO], Int[-LARGURA, +LARGURA])
 interp. representa a posição da plataforma no eixo x e y
 '''
 #EXEMPLOS:
-PLAT_INICIAL = Plat(LARGURA//2, (ALTURA//2 + ALTURA //4))
+PLAT_INICIAL = Plataformas(LARGURA//2, (ALTURA//2 + ALTURA //4))
 
 ##TEMPLATE
 '''
@@ -129,8 +71,16 @@ def fn_para_plat(plat):
     ... plat.x
         plat.y
 '''
+'''
+ListaPlat é um desses:
+    - VAZIA
+    - juntar(Plataformas, ListaPlat)
+'''
+#Exemplos:
 
-Jogo = definir_estrutura("Jogo", "hero, plat", mutavel=True)
+
+
+Jogo = definir_estrutura("Jogo", "hero, plataformas", mutavel=True)
 ''' Jogo pode ser formado assim: Jogo(Hero, ListaEnemy, Boolean, Int+)
 interp. representa o jogo todo com um herói e zero ou mais inimigos. O campo game_over indica se o jogo está acabado ou não.
 '''
@@ -157,7 +107,7 @@ desenha_jogo: Jogo -> Imagem
 Desenha todos os elementos do jogo de acordo com o estado atual
 '''
 def desenha_jogo(jogo):
-    desenha_plat(jogo.plat)
+    desenha_plataformas(jogo.plataformas)
     desenha_hero(jogo.hero)
     '''if (not jogo.game_over):
         desenha_hero(jogo.hero)
@@ -167,50 +117,31 @@ def desenha_jogo(jogo):
 
 
 '''
+desenha_plat: Plat -> Imagem
+Desenha a plataforma'''
+def desenha_plat(plataformas):
+    colocar_imagem(PLAT, tela, plataformas.x, plataformas.y)
+
+'''
+desenha_plataformas: ListPlat -> Imagem
+Desenha todas as Plataformas
+'''
+def desenha_plataformas(plataformas):
+    for plataformas in plataformas:
+        desenha_plat(plataformas)
+
+'''
 desenha_hero: Hero -> Imagem
 Desenha o herói'''
 def desenha_hero(hero):
-    '''colocar_imagem(IMAGEM, tela, hero.x, hero.y)'''
-    global Scont
-    global Wcont
+    colocar_imagem(IMAGEM, tela, hero.x, hero.y)
 
-    if Scont + 1 >= 66:
-        Scont = 0
-    if hero.dy == 0 and hero.dx == 0 and Right:
-        colocar_imagem(StandR[Scont // 6], tela, hero.x, hero.y)
-        Scont += 1
-    if hero.dy == 0 and hero.dx == 0 and Left:
-        colocar_imagem(StandL[Scont // 6], tela, hero.x, hero.y)
-        Scont += 1
 
-    if Wcont + 1 >= 48:
-        Wcont = 0
-    if hero.dy == 0 and hero.dx != 0 and Right:
-        colocar_imagem(WalkR[Wcont // 6], tela, hero.x, hero.y)
-        Wcont += 1
-    if hero.dy == 0 and hero.dx != 0 and Left:
-        colocar_imagem(WalkL[Wcont // 6], tela, hero.x, hero.y)
-        Wcont += 1
 
-    if (not COLIDE) and hero.dy < 0 and Right:
-        colocar_imagem(JumpR[0], tela, hero.x, hero.y)
-    if (not COLIDE) and hero.dy >= 0 and hero.dy <= 10 and Right:
-        colocar_imagem(JumpR[1], tela, hero.x, hero.y)
-    if (not COLIDE) and hero.dy > 10 and Right:
-        colocar_imagem(JumpR[2], tela, hero.x, hero.y)
 
-    if (not COLIDE) and hero.dy < 0 and Left:
-        colocar_imagem(JumpL[0], tela, hero.x, hero.y)
-    if (not COLIDE) and hero.dy >= 0 and hero.dy <= 10 and Left:
-        colocar_imagem(JumpL[1], tela, hero.x, hero.y)
-    if (not COLIDE) and hero.dy > 10 and Left:
-        colocar_imagem(JumpL[2], tela, hero.x, hero.y)
 
-'''
-desenha_plat: Plat -> Imagem
-Desenha a plataforma'''
-def desenha_plat(plat):
-    colocar_imagem(PLAT, tela, plat.x, plat.y)
+
+
 
 
 ''' ------------ [MOVE] ------------'''
@@ -220,10 +151,11 @@ Produz o próximo estado do jogo
 '''
 def mover_tudo(jogo):
     global COLIDE
-    if colide_plat(jogo.hero, jogo.plat):
+    if colide_plataforma(jogo.hero, jogo.plataformas):
         COLIDE = True
         jogo.hero.dy = 0
-    if (not colide_plat(jogo.hero, jogo.plat)):
+
+    if (not colide_plataforma(jogo.hero, jogo.plataformas)):
             COLIDE = False
     mover_hero(jogo.hero)
     return jogo
@@ -266,13 +198,20 @@ def mover_hero(hero):
     return hero
 
 
+
+
+
+
+
+
+
 ''' ------------ [COLISÃO] ------------'''
 
 '''
 colide_plat: Hero, Plat -> Boolean
 Verifica se o herói colidiu com a Plataforma.
 '''
-def colide_plat(hero, plat):
+def colide_plat(hero, plataformas):
     '''Hit Box - Herói'''
     heroL = hero.x - METADE_L_HERO
     heroR = hero.x + METADE_L_HERO
@@ -280,15 +219,31 @@ def colide_plat(hero, plat):
     heroD = hero.y + METADE_A_HERO
 
     '''Hit Box - Plataforma'''
-    platL = plat.x - METADE_L_PLAT
-    platR = plat.x + METADE_L_PLAT
-    platU = plat.y - METADE_A_PLAT
-    platD = plat.y + METADE_A_PLAT
+    platL = plataformas.x - METADE_L_PLAT
+    platR = plataformas.x + METADE_L_PLAT
+    platU = plataformas.y - METADE_A_PLAT
+    platD = plataformas.y + METADE_A_PLAT
 
     return heroR >= platL and \
            heroL <= platR and \
            heroD >= platU and \
            heroU <= platD
+
+'''
+colide_plataforma: Hero, ListaChurras -> Boolean
+'''
+def colide_plataforma(hero, plataformas):
+    for plat in plataformas:
+        if colide_plat(hero, plataformas):
+            return True
+    return False
+
+
+
+
+
+
+
 
 
 ''' ------------ [TRATA TECLA] ------------'''
@@ -300,7 +255,7 @@ Trata tecla para o jogo todo.
 '''
 def trata_tecla_jogo(jogo, tecla):
     hero_novo = trata_tecla_hero(jogo.hero, tecla)
-    return Jogo(hero_novo, jogo.plat)
+    return Jogo(hero_novo, jogo.plataformas)
 
 
 '''
@@ -309,20 +264,14 @@ Faz o herói se movimentar para a direita ou esquerda, ou pular
 '''
 def trata_tecla_hero(hero, tecla):
     global COLIDE
-    global Right
-    global Left
     if tecla == pg.K_UP and COLIDE:
         COLIDE = False
         hero.y -= 20
         hero.dy -= 20
     elif tecla == pg.K_RIGHT:
         hero.dx = DX
-        Right = True
-        Left = False
     elif tecla == pg.K_LEFT:
         hero.dx = -DX
-        Right = False
-        Left = True
     return hero
 
 
@@ -331,8 +280,17 @@ trata_solta_jogo: Jogo Tecla -> Jogo
 '''
 def trata_solta_jogo(jogo, tecla):
     if tecla == pg.K_LEFT or tecla == pg.K_RIGHT:
-        return Jogo(Hero(jogo.hero.x, jogo.hero.y, 0, jogo.hero.dy), jogo.plat)
+        return Jogo(Hero(jogo.hero.x, jogo.hero.y, 0, jogo.hero.dy), jogo.plataformas)
     return jogo
+
+
+
+
+
+
+
+
+
 
 
 '''
@@ -342,7 +300,7 @@ inicie o mundo com JOGO_INICIAL
 def main(inic):
     big_bang(inic,  # Jogo
              tela=tela,
-             frequencia=40,
+             frequencia=60,
              quando_tick=mover_tudo,  # Jogo -> Jogo
              desenhar=desenha_jogo,  # Jogo -> Imagem
              quando_tecla=trata_tecla_jogo,  # Hero Tecla -> Vaca

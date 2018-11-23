@@ -4,7 +4,7 @@
 from htdp_pt_br.universe import *
 import random
 
-IMAGEM = circulo(50,Cor(96, 219, 211))
+IMAGEM = circulo(50,Cor(96, 219, 150))
 PLAT = retangulo(200,35,Cor(96, 219, 211))
 
 
@@ -25,7 +25,7 @@ METADE_L_HERO = largura_imagem(IMAGEM) // 2
 METADE_A_HERO = altura_imagem(IMAGEM) // 2
 METADE_L_ENEMY = largura_imagem(IMAGEM) // 2
 METADE_A_ENEMY = altura_imagem(IMAGEM) // 2
-METADE_L_PLAT = altura_imagem(PLAT) // 2
+METADE_L_PLAT = largura_imagem(PLAT) // 2
 METADE_A_PLAT = altura_imagem(PLAT) // 2
 
 
@@ -35,7 +35,7 @@ LIMITE_CIMA = METADE_A_HERO
 LIMITE_BAIXO = ALTURA - METADE_A_HERO
 
 CHAO = LIMITE_BAIXO
-
+COLIDE = False
 
 '''================================================================================================'''
 ''' ==================================== [DEFINIÇÃO DE DADOS] ====================================='''
@@ -63,7 +63,7 @@ Plat = definir_estrutura("plat", "x, y", mutavel=True)
 interp. representa a posição da plataforma no eixo x e y
 '''
 #EXEMPLOS:
-PLAT_INICIAL = Plat((LARGURA//2 + LARGURA//4), (ALTURA//2 + ALTURA//4))
+PLAT_INICIAL = Plat(LARGURA//2, (ALTURA//2 + ALTURA //4))
 
 ##TEMPLATE
 '''
@@ -99,8 +99,8 @@ desenha_jogo: Jogo -> Imagem
 Desenha todos os elementos do jogo de acordo com o estado atual
 '''
 def desenha_jogo(jogo):
-    desenha_hero(jogo.hero)
     desenha_plat(jogo.plat)
+    desenha_hero(jogo.hero)
     '''if (not jogo.game_over):
         desenha_hero(jogo.hero)
         desenha_enemies(jogo.enemy)
@@ -127,10 +127,13 @@ mover_tudo: Jogo -> Jogo
 Produz o próximo estado do jogo 
 '''
 def mover_tudo(jogo):
+    global COLIDE
+    if colide_plat(jogo.hero, jogo.plat):
+        COLIDE = True
+        jogo.hero.dy = 0
     if (not colide_plat(jogo.hero, jogo.plat)):
-        mover_hero(jogo.hero)
-    else:
-        mover_hero(jogo.hero)
+            COLIDE = False
+    mover_hero(jogo.hero)
     return jogo
 
 '''
@@ -138,8 +141,10 @@ mover_hero: Hero -> Hero
 Move o Herói
 '''
 def mover_hero(hero):
+    global COLIDE
     pulo = False
     cont = 10
+
 
     hero.x = hero.x + hero.dx
     hero.y = hero.y + hero.dy
@@ -153,12 +158,11 @@ def mover_hero(hero):
         hero.dy = -hero.dy
         return hero
 
-    if hero.y == CHAO:
+    if COLIDE:
         hero.dy = 0
     else:
         hero.dy += G
         if not(pulo):
-            if (pg.K_UP):
                 pulo = True
         else:
             if cont >= -10:
@@ -167,10 +171,8 @@ def mover_hero(hero):
             else:
                 pulo = False
                 cont = 10
-        if hero.y >= CHAO:
-            hero.y = CHAO
-            hero.dy = 0
     return hero
+
 
 ''' ------------ [COLISÃO] ------------'''
 
@@ -214,7 +216,10 @@ trata_tecla: Hero, Tecla -> Hero
 Faz o herói se movimentar para a direita ou esquerda, ou pular
 '''
 def trata_tecla_hero(hero, tecla):
-    if tecla == pg.K_UP and hero.y == CHAO:
+    global COLIDE
+    if tecla == pg.K_UP and COLIDE:
+        COLIDE = False
+        hero.y -= 20
         hero.dy -= 20
     elif tecla == pg.K_RIGHT:
         hero.dx = DX
@@ -228,15 +233,5 @@ trata_solta_jogo: Jogo Tecla -> Jogo
 '''
 def trata_solta_jogo(jogo, tecla):
     if tecla == pg.K_LEFT or tecla == pg.K_RIGHT:
-        return Jogo(Hero(jogo.hero.x, jogo.hero.y, 0, jogo.hero.dy), jogo.plat,)
+        return Jogo(Hero(jogo.hero.x, jogo.hero.y, 0, jogo.hero.dy), jogo.plat)
     return jogo
-
-
-'''
-trata_solta_jogo: Jogo Tecla -> Jogo
-'''
-def trata_solta_tecla(hero, tecla):
-    if tecla == pg.K_LEFT or tecla == pg.K_RIGHT:
-        return Hero(hero.x, hero.y, 0, 0)
-    return hero
-
