@@ -5,7 +5,7 @@ from htdp_pt_br.universe import *
 import random
 
 IMAGEM = circulo(25,Cor(94, 198, 196))
-PLAT = retangulo(200,35,Cor(103, 133, 131))
+PLAT = retangulo(150,10,Cor(103, 133, 131))
 ENEMY = circulo(25,Cor(215, 89, 127))
 
 StandR = [carregar_imagem("./SR1.png"),
@@ -157,9 +157,10 @@ ListaEnemy é um desses:
 #Exemplos:
 L_PLAT_1 = [PLAT_INICIAL]
 L_PLAT_INICIAL = [
-    Plat(LARGURA//4, ALTURA//4),
-    Plat(LARGURA//2, ALTURA//2 + ALTURA//4),
-    Plat(LARGURA//2 + LARGURA//4, ALTURA//4)]
+    Plat(LARGURA // 2, ALTURA // 4),
+    Plat(LARGURA // 4, ALTURA // 2),
+    Plat(LARGURA // 2 + LARGURA // 4, ALTURA // 2),
+    Plat(LARGURA // 2, ALTURA // 2 + ALTURA // 4)]
 
 '''
 #template
@@ -199,7 +200,7 @@ Desenha todos os elementos do jogo de acordo com o estado atual
 '''
 def desenha_jogo(jogo):
     if (not jogo.game_over):
-        desenha_plat(jogo.plataformas)
+        desenha_plataformas(jogo.plataformas)
         desenha_enemy(jogo.enemy)
         desenha_hero(jogo.hero)
     else:
@@ -220,6 +221,10 @@ Desenha a plataforma.
 def desenha_plat(plat):
     colocar_imagem(PLAT, tela, plat.x, plat.y)
 
+
+def desenha_plataformas(plataformas):
+    for plat in plataformas:
+        desenha_plat(plat)
 
 '''
 desenha_enemy: Enemy -> Imagem
@@ -441,7 +446,7 @@ Trata tecla para o jogo todo.
 def trata_tecla_jogo(jogo, tecla):
     if (not jogo.game_over):
         hero_novo = trata_tecla_hero(jogo.hero, tecla)
-        return Jogo(hero_novo, jogo.enemy, jogo.plat, False)
+        return Jogo(hero_novo, jogo.enemy, jogo.plataformas, False)
     elif tecla == pg.K_SPACE:
         return criar_jogo_inicial()
     else:
@@ -476,7 +481,7 @@ trata_solta_jogo: Jogo Tecla -> Jogo
 '''
 def trata_solta_jogo(jogo, tecla):
     if tecla == pg.K_LEFT or tecla == pg.K_RIGHT:
-        return Jogo(Hero(jogo.hero.x, jogo.hero.y, 0, jogo.hero.dy), jogo.enemy, jogo.plat, False)
+        return Jogo(Hero(jogo.hero.x, jogo.hero.y, 0, jogo.hero.dy), jogo.enemy, jogo.plataformas, False)
     return jogo
 
 
