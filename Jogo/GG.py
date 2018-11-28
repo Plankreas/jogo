@@ -118,12 +118,12 @@ def fn_para_hero(hero):
 '''
 
 
-Enemy = definir_estrutura("enemy", "x, y, dx, dy", mutavel=True)
+Enemy = definir_estrutura("enemy", "x, y, dx, dy, dz", mutavel=True)
 ''' Enemy pode ser formado da seguinte forma: Enemy(Int[LIMITE_ESQUERDO, LIMITE_DIREITO], Int[-LARGURA, +LARGURA])
 interp. representa a posição do inimigo no eixo x e y, e sua velocidade e direção (dx e dy)
 '''
 #EXEMPLOS:
-ENEMY_INICIAL = Enemy(LARGURA//2, 0, 0, 0)
+ENEMY_INICIAL = Enemy(LARGURA//2, 0 - ALTURA // 2, 0, 0, 1)
 
 ##TEMPLATE
 '''
@@ -132,6 +132,22 @@ def fn_para_enemy(enemy):
         enemy.y
         enemy.dx
         enemy.dy
+'''
+
+#Exemplos:
+L_ENEMY_1 = [ENEMY_INICIAL]
+INIMIGOS = [
+    Enemy(LARGURA // 2, 0 - ALTURA // 2, 0, 0, 1),
+    Enemy(LARGURA // 4, 0 - ALTURA // 2, 0, 0, 0),
+    Enemy(LARGURA // 2 + LARGURA // 4, 0 - ALTURA // 2, 0, 0, 1)]
+'''
+#template
+def fn_para_lista(lista):
+    if lista.vazia:
+        return ...
+    else:
+        ... lista.primeiro
+            fn_para_lista(lista.resto)
 '''
 
 Plat = definir_estrutura("plat", "x, y", mutavel=True)
@@ -148,15 +164,9 @@ def fn_para_plat(plat):
         plat.y
 '''
 
-
-'''
-ListaEnemy é um desses:
-    - VAZIA
-    - juntar(enemy, ListaEnemy)
-'''
 #Exemplos:
 L_PLAT_1 = [PLAT_INICIAL]
-L_PLAT_INICIAL = [
+PLATAFORMAS = [
     Plat(LARGURA // 2, ALTURA // 4),
     Plat(LARGURA // 4, ALTURA // 2),
     Plat(LARGURA // 2 + LARGURA // 4, ALTURA // 2),
@@ -172,12 +182,12 @@ def fn_para_lista(lista):
             fn_para_lista(lista.resto)
 '''
 
-Jogo = definir_estrutura("Jogo", "hero, enemy, plataformas, game_over", mutavel=True)
+Jogo = definir_estrutura("Jogo", "hero, inimigos, plataformas, game_over, tempo_inimigos", mutavel=True)
 ''' Jogo pode ser formado assim: Jogo(Hero, ListaEnemy, Boolean, Int+)
 interp. representa o jogo todo com um herói, zero ou mais inimigos, e plataformas. O campo game_over indica se o jogo está acabado ou não.
 '''
 #EXEMPLOS:
-JOGO_INICIAL = Jogo(HERO_INICIAL, ENEMY_INICIAL, L_PLAT_INICIAL, False)
+JOGO_INICIAL = Jogo(HERO_INICIAL, INIMIGOS, PLATAFORMAS, False, 0)
 
 ##TEMPLATE
 '''
@@ -201,7 +211,7 @@ Desenha todos os elementos do jogo de acordo com o estado atual
 def desenha_jogo(jogo):
     if (not jogo.game_over):
         desenha_plataformas(jogo.plataformas)
-        desenha_enemy(jogo.enemy)
+        desenha_inimigos(jogo.inimigos)
         desenha_hero(jogo.hero)
     else:
         desenha_game_over()
@@ -233,6 +243,10 @@ Desenha o iminigo.
 def desenha_enemy(enemy):
     colocar_imagem(ENEMY, tela, enemy.x, enemy.y)
 
+def desenha_inimigos(inimigos):
+    for enemy in inimigos:
+        desenha_enemy(enemy)
+
 
 '''
 desenha_game_over: Jogo -> Imagem
@@ -241,6 +255,9 @@ Desenha a tela de Game Over.
 def desenha_game_over():
     texto_game_over = texto("GAME OVER", Fonte("comicsans", 50), Cor("red"), (LARGURA//2))
     colocar_imagem(texto_game_over, tela, (LARGURA//2), (ALTURA//2))
+
+
+
 
 
 ''' ------------ [MOVE] ------------'''
@@ -252,20 +269,18 @@ def mover_tudo(jogo):
     global COLIDE
     global COLIDE_ENEMY
 
-    if not (morreu(jogo.hero, jogo.enemy) or caiu(jogo.hero)):
+    if not (colide_inimigos(jogo.hero, jogo.inimigos) or caiu(jogo.hero)):
         if colide_plataformas(jogo.hero, jogo.plataformas):
             COLIDE = True
-            jogo.hero.dy = 0
         if (not colide_plataformas(jogo.hero, jogo.plataformas)):
-                COLIDE = False
-        if colide_plataformas_enemy(jogo.enemy, jogo.plataformas):
-            COLIDE_ENEMY = True
-            jogo.enemy.dy = 0
-        if (not colide_plataformas_enemy(jogo.enemy, jogo.plataformas)):
-            COLIDE_ENEMY = False
+            COLIDE = False
 
+        colide_enemies(jogo.inimigos, jogo.plataformas)
         mover_hero(jogo.hero)
-        mover_enemy(jogo.enemy)
+        mover_inimigos(jogo.inimigos)
+        jogo.tempo_inimigos = (jogo.tempo_inimigos + 1) % (5 * 60)
+        if (jogo.tempo_inimigos == 0):
+            jogo.inimigos.append(criar_inimigo())
         return jogo
     else:
         jogo.game_over = True
@@ -280,6 +295,8 @@ def mover_hero(hero):
     pulo = False
     cont = 10
 
+    if COLIDE:
+        hero.dy = 0
 
     hero.x = hero.x + hero.dx
     hero.y = hero.y + hero.dy
@@ -314,6 +331,7 @@ mover_enemy: Enemy -> Enemy
 Move o inimigo.
 '''
 def mover_enemy(enemy):
+
     enemy.x = enemy.x + enemy.dx
     enemy.y = enemy.y + enemy.dy
 
@@ -324,13 +342,13 @@ def mover_enemy(enemy):
         enemy.x = LIMITE_ESQUERDO
         enemy.dx -= enemy.dx
 
-    if COLIDE_ENEMY:
-        enemy.dy = 0
-        enemy.dx = DX or -DX
-    else:
-        enemy.dy += G
-        enemy.dx = 0
     return enemy
+
+def mover_inimigos(inimigos):
+    for enemy in inimigos:
+        mover_enemy(enemy)
+
+
 
 
 
@@ -390,10 +408,25 @@ def colide_plat_enemy(enemy, plat):
            enemyU <= platD
 
 
-def colide_plataformas_enemy(enemy, plataformas):
+def colide_enemies(inimigos, plataformas):
+    for enemy in inimigos:
+        if colide_plataformas_inimigos(enemy, plataformas):
+            enemy.dy = 0
+            if enemy.dz == 1:
+                enemy.dx = DX
+            else:
+                enemy.dx = -DX
+        else:
+            enemy.dy += G
+            enemy.dx = 0
+
+
+def colide_plataformas_inimigos(enemy, plataformas):
     for plat in plataformas:
         if colide_plat_enemy(enemy, plat):
             return True
+    return False
+
 
 '''
 morreu: Hero, Enemy -> Boolean
@@ -418,6 +451,13 @@ def morreu(hero, enemy):
            heroU <= enemyD
 
 
+def colide_inimigos(hero, inimigos):
+    for enemy in inimigos:
+        if morreu(hero, enemy):
+            return True
+    return False
+
+
 '''
 morreu: Hero, Enemy -> Boolean
 Verifica se o inimigo matou o herói por contato.
@@ -428,11 +468,23 @@ def caiu(hero):
 
     return heroU >= CHAO
 
+
+
+
+
+
 ''' ------------ [OUTROS] ------------'''
 
 
 def criar_jogo_inicial():
-    return Jogo(HERO_INICIAL, ENEMY_INICIAL, PLAT_INICIAL, False)
+    return JOGO_INICIAL
+
+def criar_inimigo():
+    return Enemy(random.randrange(LIMITE_ESQUERDO, LIMITE_DIREITO + 1),
+                 random.randrange(0 - ALTURA, LIMITE_CIMA),
+                 0,
+                 0,
+                 random.randrange(0, 2))
 
 
 
@@ -446,7 +498,7 @@ Trata tecla para o jogo todo.
 def trata_tecla_jogo(jogo, tecla):
     if (not jogo.game_over):
         hero_novo = trata_tecla_hero(jogo.hero, tecla)
-        return Jogo(hero_novo, jogo.enemy, jogo.plataformas, False)
+        return Jogo(hero_novo, jogo.inimigos, jogo.plataformas, False, jogo.tempo_inimigos)
     elif tecla == pg.K_SPACE:
         return criar_jogo_inicial()
     else:
@@ -481,7 +533,7 @@ trata_solta_jogo: Jogo Tecla -> Jogo
 '''
 def trata_solta_jogo(jogo, tecla):
     if tecla == pg.K_LEFT or tecla == pg.K_RIGHT:
-        return Jogo(Hero(jogo.hero.x, jogo.hero.y, 0, jogo.hero.dy), jogo.enemy, jogo.plataformas, False)
+        return Jogo(Hero(jogo.hero.x, jogo.hero.y, 0, jogo.hero.dy), jogo.inimigos, jogo.plataformas, False, jogo.tempo_inimigos)
     return jogo
 
 
