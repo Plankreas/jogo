@@ -1,105 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from htdp_pt_br.universe import *
-import random
-
-ALTURA, LARGURA = 600,600
-tela = criar_tela_base(ALTURA, LARGURA)
-
-LIMITE_ESQUERDO = 20
-LIMITE_DIREITO = LARGURA-20
-LIMITE_CIMA = 20
-LIMITE_BAIXO = ALTURA-20
-
-CHAO = LIMITE_BAIXO
-
-DX = 3
-
-METADE_L_HERO = largura_imagem(IMAGEM) // 2
-METADE_A_HERO = altura_imagem(IMAGEM) // 2
-METADE_L_ENEMY = largura_imagem(IMAGEM) // 2
-METADE_A_ENEMY = altura_imagem(IMAGEM) // 2
-METADE_L_PLAT = altura_imagem(IMAGEM) // 2
-METADE_A_PLAT = altura_imagem(IMAGEM) // 2
-
-
-'''================================================================================================'''
-''' ==================================== [DEFINIÇÃO DE DADOS] ====================================='''
-'''================================================================================================'''
-
-
-Hero = definir_estrutura("hero", "x, y, dx, dy", mutavel=True)
-''' Hero pode ser formado da seguinte forma: Hero(Int[LIMITE_ESQUERDO, LIMITE_DIREITO], Int[-LARGURA, +LARGURA])
-interp. representa a posição do herói no eixo x e y, e sua velocidadee direção (dx e dy)
-'''
-#EXEMPLOS:
-HERO_INICIAL = Hero(LIMITE_ESQUERDO, LIMITE_BAIXO, 0, 0)
-
-##TEMPLATE
-'''
-def fn_para_hero(hero):
-    ... hero.x
-        hero.y
-        hero.dx
-        hero.dy
-'''
-
-Enemies = definir_estrutura("enemies", "x, y, dx, dy", mutavel=True)
-''' Enemy pode ser formado como: Enemy(Int[LIMITE_ESQUERDO, LIMITE_DIREITO], Int[LIMITE_CIMA, LIMITE_BAIXO], Int)
-interp. representa a posição do inimigo no eixo, x, y, e velocidade e direção (dx e dy) 
-'''
-#EXEMPLOS:
-ENEMY_INICIAL = Enemy(LARGURA//2, LIMITE_CIMA, 3)
-
-##TEMPLATE
-'''
-def fn_para_enemy(enemy):
-    if enemy.x < LIMITE_ESQUERDO or enemy.x > LIMITE_DIREITO: #VALIDAÇÃO
-        raise ValueError("ERRO: inimigo invalido (x está fora dos limites)")
-    #COLOCAR VALIDACAO ṔARA Y
-    ... enemy.x
-        enemy.dx
-        enemy.y
-        enemy.dy
-'''
-
-'''
-ListaEnemy é um desses:
-    - VAZIA
-    - juntar(enemy, ListaEnemy)
-'''
-#Exemplos:
-L_ENEMY_1 = [ENEMY_INICIAL]
-L_ENEMY_INICIAL = [
-    Enemy(LARGURA//4, LIMITE_CIMA, 3),
-    Enemy(LARGURA//2, ALTURA//2, 3),
-    Enemy(LARGURA//2 + LARGURA//4, LIMITE_BAIXO, 3)]
-
-'''
-#template
-def fn_para_lista(lista):
-    if lista.vazia:
-        return ...
-    else:
-        ... lista.primeiro
-            fn_para_lista(lista.resto)
-'''
-
-Jogo = definir_estrutura("Jogo", "hero, enemies, game_over, enemy_time, point", mutavel=True)
-''' Jogo pode ser formado assim: Jogo(Hero, ListaEnemy, Boolean, Int+)
-interp. representa o jogo todo com um herói e zero ou mais inimigos. O campo game_over indica se o jogo está acabado ou não.
-'''
-#EXEMPLOS:
-JOGO_INICIAL = Jogo(HERO_INICIAL, [], False, 0, 0, 1)
-
-##TEMPLATE
-'''
-def fn_para_jogo(jogo):
-    ... jogo.hero
-        jogo.enemy
-        jogo.game_over
-'''
+from Jogo_Const_Dados import *
 
 
 '''================================================================================================'''
@@ -107,16 +9,25 @@ def fn_para_jogo(jogo):
 '''================================================================================================'''
 
 
-''' ------------ [DESENHA] ------------'''
+
+
+''' ------------------------ [DESENHA] ------------------------'''
 
 '''
 desenha_jogo: Jogo -> Imagem
 Desenha todos os elementos do jogo de acordo com o estado atual
 '''
 def desenha_jogo(jogo):
+    colocar_imagem(FUNDO, tela, LARGURA // 2, ALTURA // 2)
+    desenha_pontos(jogo)
     if (not jogo.game_over):
+        colocar_imagem(MISC1, tela, (LARGURA - LARGURA // 8), (ALTURA // 2 - 60))
+        colocar_imagem(MISC3, tela, (LARGURA // 8), (ALTURA - 60))
+        colocar_imagem(MISC2, tela, (LARGURA // 2 - 40), (ALTURA // 4 - 55))
+
+        desenha_plataformas(jogo.plataformas)
+        desenha_inimigos(jogo.inimigos)
         desenha_hero(jogo.hero)
-        desenha_enemies(jogo.enemy)
     else:
         desenha_game_over()
 
@@ -125,64 +36,127 @@ def desenha_jogo(jogo):
 desenha_hero: Hero -> Imagem
 Desenha o herói'''
 def desenha_hero(hero):
-    if hero.dx >= 0:
-        '''colocar_imagem(Imagem, tela, hero.x, hero.y, hero.dx, hero.dy)'''
-        #colocar_imagem(IMG_VACA_INO, tela, vaca.x, Y_VACA)
-    else:
-        '''colocar_imagem(Imagem, tela, hero.x, hero.y, hero.dx, hero.dy)'''
+    global Scont
+    global Wcont
 
+    if Scont + 1 >= 66:
+        Scont = 0
+    if hero.dy == 0 and hero.dx == 0 and Right:
+        colocar_imagem(StandR[Scont // 6], tela, hero.x, hero.y)
+        Scont += 1
+    if hero.dy == 0 and hero.dx == 0 and Left:
+        colocar_imagem(StandL[Scont // 6], tela, hero.x, hero.y)
+        Scont += 1
+
+    if Wcont + 1 >= 24:
+        Wcont = 0
+    if hero.dy == 0 and hero.dx != 0 and Right:
+        colocar_imagem(WalkR[Wcont // 3], tela, hero.x, hero.y)
+        Wcont += 1
+    if hero.dy == 0 and hero.dx != 0 and Left:
+        colocar_imagem(WalkL[Wcont // 3], tela, hero.x, hero.y)
+        Wcont += 1
+
+    if (not COLIDE) and hero.dy < 0 and Right:
+        colocar_imagem(JumpR[0], tela, hero.x, hero.y)
+    if (not COLIDE) and hero.dy >= 0 and hero.dy <= 10 and Right:
+        colocar_imagem(JumpR[1], tela, hero.x, hero.y)
+    if (not COLIDE) and hero.dy > 10 and Right:
+        colocar_imagem(JumpR[2], tela, hero.x, hero.y)
+
+    if (not COLIDE) and hero.dy < 0 and Left:
+        colocar_imagem(JumpL[0], tela, hero.x, hero.y)
+    if (not COLIDE) and hero.dy >= 0 and hero.dy <= 10 and Left:
+        colocar_imagem(JumpL[1], tela, hero.x, hero.y)
+    if (not COLIDE) and hero.dy > 10 and Left:
+        colocar_imagem(JumpL[2], tela, hero.x, hero.y)
+
+
+'''
+desenha_plat: Plat -> Imagem
+Desenha a plataforma.
+'''
+def desenha_plat(plat):
+    colocar_imagem(PLAT_IMG, tela, plat.x, plat.y)
+
+
+def desenha_plataformas(plataformas):
+    for plat in plataformas:
+        desenha_plat(plat)
 
 '''
 desenha_enemy: Enemy -> Imagem
-Desenha o inimigo na posicao'''
+Desenha o iminigo.
+'''
 def desenha_enemy(enemy):
-    colocar_imagem(IMG, tela, enemy.x, enemy.y)
+    '''colocar_imagem(ENEMY, tela, enemy.x, enemy.y)'''
+    global Econt
+    if Econt + 1 >= 80:
+        Econt = 0
+    if enemy.dx == EDX:
+        colocar_imagem(WalkER[Econt // 20], tela, enemy.x, enemy.y)
+        Econt += 1
+    if enemy.dx == -EDX:
+        colocar_imagem(WalkEL[Econt // 20], tela, enemy.x, enemy.y)
+        Econt += 1
+    if enemy.dy > 0 and enemy.dz == 1:
+        colocar_imagem(FallER, tela, enemy.x, enemy.y)
+        Econt += 1
+    if enemy.dy > 0 and enemy.dz == 0:
+        colocar_imagem(FallEL, tela, enemy.x, enemy.y)
+        Econt += 1
+
+def desenha_inimigos(inimigos):
+    for enemy in inimigos:
+        desenha_enemy(enemy)
 
 
 '''
-desenha_enemy: ListEnemy -> Imagem
-Desenha os inimigos
+desenha_game_over: Jogo -> Imagem
+Desenha a tela de Game Over.
 '''
-def desenha_enemies(enemies):
-    for ene in enemies:
-        desenha_enemy(enemies)
-
-
-'''
-desenha_plat: ListPlat -> Imagem
-Desenha as plataformas
-'''
-def desenha_plat(plat):
-    '''for ene in enemy:
-        desenha_enemy(enemy)'''
-    colocar_imagem(Imagem, tela, 300, 550)
-
-
 def desenha_game_over():
-    texto_game_over = texto("GAME OVER", Fonte("comicsans", 50), Cor("red"))
-    colocar_imagem(texto_game_over, tela, LARGURA//2, ALTURA//2)
+    texto_game_over = texto("GAME OVER", Fonte("comicsans", 50), Cor("white"), (LARGURA//2))
+    colocar_imagem(texto_game_over, tela, (LARGURA//2), (ALTURA//2))
+
+
+def desenha_pontos(jogo):
+    pontos = texto("Pontuação: ", Fonte("comicsans", 25), Cor("white"), (LARGURA))
+    colocar_imagem(pontos, tela, 50, 25)
+    ponto = texto(str(jogo.pontos), Fonte("comicsans", 25), Cor("white"), (LARGURA))
+    px = largura_imagem(pontos)
+    colocar_imagem(ponto,tela,px + 25, 25)
 
 
 
-''' ------------ [MOVE] ------------'''
 
+
+
+''' ------------------------ [MOVE] ------------------------'''
 '''
 mover_tudo: Jogo -> Jogo
-Produz o próximo estado do jogo #############################################################################???
+Produz o próximo estado do jogo 
 '''
 def mover_tudo(jogo):
-    if (not colide_enemies (jogo.hero, jogo.enemies)):
-        mover_hero(jogo.hero)   ##funcao helper (auxiliar)
-        if vaca_atingiu_alvo(jogo.vaca, ALVOS[jogo.proximo_alvo]):
-            jogo.pontuacao += 10
-            # novo_alvo = (jogo.proximo_alvo + 1) % len(ALVOS)
-            jogo.proximo_alvo = random.randrange(0, len(ALVOS))
+    global COLIDE
 
-            mover_enemies(jogo.enemies)  ##funcao helper
-        jogo.tempo_brotagem_churras = (jogo.enemy_time + 1) % (TEMPO_CADA_BROTAGEM * FREQUENCIA)
-        if (jogo.tempo_brotagem_churras == 0):
-            jogo.churrasqueiros.append(criar_churras_aleatorio())
+    if not (colide_inimigos(jogo.hero, jogo.inimigos) or caiu(jogo.hero)):
+        if colide_plataformas(jogo.hero, jogo.plataformas):
+            COLIDE = True
+        if (not colide_plataformas(jogo.hero, jogo.plataformas)):
+            COLIDE = False
 
+        colide_enemies(jogo.inimigos, jogo.plataformas)
+
+        if matou_inimigos(jogo.hero, jogo.inimigos):
+            jogo.pontos += 10
+
+        mover_hero(jogo.hero)
+        mover_inimigos(jogo.inimigos)
+        caiu_inimigo(jogo.inimigos)
+        jogo.tempo_inimigos = (jogo.tempo_inimigos + 1) % 50
+        if (jogo.tempo_inimigos == 0):
+            jogo.inimigos.append(criar_inimigo())
         return jogo
     else:
         jogo.game_over = True
@@ -190,86 +164,255 @@ def mover_tudo(jogo):
 
 '''
 mover_hero: Hero -> Hero
-Move o Herói'''
+Move o Herói
+'''
 def mover_hero(hero):
-    nextx = hero.x + DX
-    nexty = hero.y + hero.dy
-    if nextx > LIMITE_DIREITO or nextx < LIMITE_ESQUERDO:
-        hero.dx = 0
-        return hero
-    elif nexty > LIMITE_BAIXO or nexty< LIMITE_CIMA:
+    global COLIDE
+    pulo = False
+    cont = 10
+
+    if COLIDE:
+        hero.dy = 0
+
+    hero.x = hero.x + hero.dx
+    hero.y = hero.y + hero.dy
+
+    if hero.x > LIMITE_DIREITO:
+        hero.x = LIMITE_DIREITO
+    elif hero.x < LIMITE_ESQUERDO:
+        hero.x = LIMITE_ESQUERDO
+
+    elif hero.y < LIMITE_CIMA:
         hero.dy = -hero.dy
         return hero
-    if hero.y == CHAO:
+
+    if COLIDE:
         hero.dy = 0
     else:
         hero.dy += G
-        hero.y += hero.dy
-
-        if hero.y >= CHAO:
-            hero.y = CHAO
-            hero.dy = 0
+        if not(pulo):
+                pulo = True
+        else:
+            if cont >= -10:
+                hero.dy -= (cont **2) * 0.5
+                cont -= 1
+            else:
+                pulo = False
+                cont = 10
     return hero
+
 
 '''
 mover_enemy: Enemy -> Enemy
-Move o Inimigo'''
+Move o inimigo.
+'''
 def mover_enemy(enemy):
-    nextx = enemy.x + enemy.dx
-    if nextx > LIMITE_DIREITO or nextx < LIMITE_ESQUERDO:
-        enemy.dx = -enemy.dx
-        return enemy
-    if enemy.y == CHAO:
-        enemy.dy = 0
-    else:
-        enemy.dy += G
-        enemy.y += enemy.dy
 
-        if enemy.y >= CHAO:
-            enemy.y = CHAO
-            enemy.dy = 0
+    enemy.x = enemy.x + enemy.dx
+    enemy.y = enemy.y + enemy.dy
+
+    if enemy.x > LIMITE_DIREITO:
+        enemy.x = LIMITE_DIREITO
+        enemy.dx = -enemy.dx
+        if enemy.dz == 1:
+            enemy.dz = 0
+        else:
+            enemy.dz = 1
+
+    if enemy.x < LIMITE_ESQUERDO:
+        enemy.x = LIMITE_ESQUERDO
+        enemy.dx = -enemy.dx
+        if enemy.dz == 1:
+            enemy.dz = 0
+        else:
+            enemy.dz = 1
+
     return enemy
 
-'''
-mover_enemies: ListEnemy -> ListEnemy
-'''
-def mover_enemies(enemies):
-    return [mover_enemy(enemy) for ene in enemy ]
+def mover_inimigos(inimigos):
+    for enemy in inimigos:
+        mover_enemy(enemy)
+
+
+
 
 
 ''' ------------ [COLISÃO] ------------'''
 
 '''
-colidem: Hero, Enemy -> Boolean
-Verifica se o herói e o inimigo colidiram
+colide_plat: Hero, Plat -> Boolean
+Verifica se o herói colidiu com a Plataforma.
 '''
-def colidem(hero, enemy):
+def colide_plat(hero, plat):
+    '''Hit Box - Herói'''
     heroL = hero.x - METADE_L_HERO
     heroR = hero.x + METADE_L_HERO
     heroU = hero.y - METADE_A_HERO
     heroD = hero.y + METADE_A_HERO
 
+    '''Hit Box - Plataforma'''
+    platL = plat.x - METADE_L_PLAT
+    platR = plat.x + METADE_L_PLAT
+    platU = plat.y - METADE_A_PLAT
+    platD = plat.y + METADE_A_PLAT
+
+    return heroR >= platL and heroL <= platR and (heroD + 5) >= platU and heroU <= platD
+
+
+def colide_plataformas(hero, plataformas):
+    for plat in plataformas:
+        if colide_plat(hero, plat):
+            return True
+    return False
+
+
+
+'''
+colide_plat_enemy: v, Plat -> Boolean
+Verifica se o herói colidiu com a Plataforma.
+'''
+def colide_plat_enemy(enemy, plat):
+    '''Hit Box - Inimigo'''
     enemyL = enemy.x - METADE_L_ENEMY
     enemyR = enemy.x + METADE_L_ENEMY
     enemyU = enemy.y - METADE_A_ENEMY
     enemyD = enemy.y + METADE_A_ENEMY
 
-    return heroR >= enemyL and \
-           heroL <= enemyR and \
-           heroD >= enemyU and \
-           heroU <= enemyD
+    '''Hit Box - Plataforma'''
+    platL = plat.x - METADE_L_PLAT
+    platR = plat.x + METADE_L_PLAT
+    platU = plat.y - METADE_A_PLAT
+    platD = plat.y + METADE_A_PLAT
 
-'''
-colide_enemies: Hero, ListEnemy -> Boolean
-'''
-def colide_enemies(hero, enemies):
-    for ene in enemies:
-        if colidem(hero, enemy):
+    return enemyR >= platL and enemyL <= platR and (enemyD + 10) >= platU and enemyU <= platD
+
+
+def colide_enemies(inimigos, plataformas):
+    for enemy in inimigos:
+        if colide_plataformas_inimigos(enemy, plataformas):
+            enemy.dy = 0
+            if enemy.dz == 1:
+                enemy.dx = EDX
+            else:
+                enemy.dx = -EDX
+        else:
+            enemy.dy += G
+            enemy.dx = 0
+
+
+def colide_plataformas_inimigos(enemy, plataformas):
+    for plat in plataformas:
+        if colide_plat_enemy(enemy, plat):
             return True
     return False
 
 
+'''
+morreu: Hero, Enemy -> Boolean
+Verifica se o inimigo matou o herói por contato.
+'''
+def morreu(hero, enemy):
+    '''Hit Box - Herói'''
+    heroL = hero.x - METADE_L_HERO
+    heroR = hero.x + METADE_L_HERO
+    heroU = hero.y - METADE_A_HERO
+    heroD = hero.y + METADE_A_HERO
+    heroA = hero.y + METADE_A_HERO - 20
+
+    '''Hit Box - Inimigo'''
+    enemyL = enemy.x - METADE_L_ENEMY
+    enemyR = enemy.x + METADE_L_ENEMY
+    enemyU = enemy.y - METADE_A_ENEMY
+    enemyD = enemy.y + METADE_A_ENEMY
+
+    if heroR >= enemyL and heroL <= enemyR and heroD >= enemyU and heroU <= enemyD and heroA <= enemyU:
+        return False
+
+    return heroR >= enemyL and heroL <= enemyR and heroD >= enemyU and heroU <= enemyD
+
+
+
+
+
+def colide_inimigos(hero, inimigos):
+    for enemy in inimigos:
+        if morreu(hero, enemy):
+            return True
+    return False
+
+def matou(hero, enemy):
+    '''Hit Box - Herói'''
+    heroL = hero.x - METADE_L_HERO
+    heroR = hero.x + METADE_L_HERO
+    heroU = hero.y - METADE_A_HERO
+    heroD = hero.y + METADE_A_HERO
+    heroA = hero.y + METADE_A_HERO - 20
+
+    '''Hit Box - Inimigo'''
+    enemyL = enemy.x - METADE_L_ENEMY
+    enemyR = enemy.x + METADE_L_ENEMY
+    enemyU = enemy.y - METADE_A_ENEMY
+    enemyD = enemy.y + METADE_A_ENEMY
+
+    if heroR >= enemyL and heroL <= enemyR and heroD >= enemyU and heroU <= enemyD and heroA <= enemyU:
+        INIMIGOS.remove(enemy)
+        hero.y -= 20
+        hero.dy -= 20
+        return True
+
+def matou_inimigos(hero, inimigos):
+    for enemy in inimigos:
+        if matou(hero, enemy):
+            return True
+    return False
+
+'''
+morreu: Hero, Enemy -> Boolean
+Verifica se o inimigo matou o herói por contato.
+'''
+def caiu(hero):
+    '''Hit Box - Herói'''
+    heroU = hero.y - METADE_A_HERO
+
+    return heroU >= CHAO
+
+
+def caiu_enemy(enemy):
+    '''Hit Box - Inimigo'''
+    enemyU = enemy.y - METADE_A_ENEMY
+
+    if enemyU >= CHAO:
+        INIMIGOS.remove(enemy)
+
+
+def caiu_inimigo(inimigos):
+    for enemy in inimigos:
+        caiu_enemy(enemy)
+
+
+
+
+
+
+
+
+''' ------------ [OUTROS] ------------'''
+
+
+def criar_jogo_inicial():
+    return Jogo(Hero(LARGURA//2, ALTURA//2, 0, 0), INIMIGOS, PLATAFORMAS, False, 0,0)
+
+def criar_inimigo():
+    return Enemy(random.randrange(LIMITE_ESQUERDO, LIMITE_DIREITO + 1),
+                 0 - ALTURA // 2,
+                 0,
+                 0,
+                 random.randrange(0, 2))
+
+
+
 ''' ------------ [TRATA TECLA] ------------'''
+
 
 '''
 trata_tecla_jogo: Jogo, Tecla -> Jogo
@@ -278,20 +421,11 @@ Trata tecla para o jogo todo.
 def trata_tecla_jogo(jogo, tecla):
     if (not jogo.game_over):
         hero_novo = trata_tecla_hero(jogo.hero, tecla)
-        return Jogo(hero_novo, jogo.enemies, jogo.game_over, jogo.enemy_time)''', jogo.pontuacao, jogo.proximo_alvo)'''
-    elif tecla == pg.K_RETURN:
+        return Jogo(hero_novo, jogo.inimigos, jogo.plataformas, False, jogo.tempo_inimigos,jogo.pontos)
+    elif tecla == pg.K_SPACE:
         return criar_jogo_inicial()
     else:
         return jogo
-
-
-'''
-trata_solta_jogo: Jogo Tecla -> Jogo
-'''
-def trata_solta_jogo(jogo, tecla):
-    if tecla == pg.K_LEFT or tecla == pg.K_RIGHT:
-        return Jogo(Hero(jogo.hero.x, 0), jogo.enemies, jogo.game_over, jogo.enemy_time)''', jogo.pontuacao, jogo.proximo_alvo)'''
-    return jogo
 
 
 '''
@@ -299,30 +433,29 @@ trata_tecla: Hero, Tecla -> Hero
 Faz o herói se movimentar para a direita ou esquerda, ou pular
 '''
 def trata_tecla_hero(hero, tecla):
-    if tecla == pg.K_UP and hero.y == CHAO:
-        hero.y -= 10
-        hero.dy = -20
+    global COLIDE
+    global Right
+    global Left
+    if tecla == pg.K_UP and COLIDE:
+        COLIDE = False
+        hero.y -= 20
+        hero.dy -= 20
     elif tecla == pg.K_RIGHT:
         hero.dx = DX
+        Right = True
+        Left = False
     elif tecla == pg.K_LEFT:
         hero.dx = -DX
+        Right = False
+        Left = True
     return hero
 
 
+'''
+trata_solta_jogo: Jogo Tecla -> Jogo
+'''
+def trata_solta_jogo(jogo, tecla):
+    if tecla == pg.K_LEFT or tecla == pg.K_RIGHT:
+        return Jogo(Hero(jogo.hero.x, jogo.hero.y, 0, jogo.hero.dy), jogo.inimigos, jogo.plataformas, False, jogo.tempo_inimigos,jogo.pontos)
+    return jogo
 
-''' ------------ [OUTROS] ------------'''
-
-'''
-Reinicia o jogo
-'''
-def criar_jogo_inicial():
-    return Jogo(HERO_INICIAL, [], False, 0, 0, 1)
-
-'''
-criar_enemies: -> Enemies
-'''
-def criar_enemies():
-    return Enemies(random.randrange(LIMITE_ESQUERDO, LIMITE_DIREITO+1),
-                         random.randrange(LIMITE_CIMA, LIMITE_BAIXO + 1),
-                         random.randrange(-5, 6),
-                         random.randrange(-5, 6))
